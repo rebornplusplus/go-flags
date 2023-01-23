@@ -285,6 +285,8 @@ func (g *Group) scanStruct(realval reflect.Value, sfield *reflect.StructField, h
 		choices := mtag.GetMany("choice")
 		hidden := !isStringFalsy(mtag.Get("hidden"))
 
+		terminator := mtag.Get("terminator")
+
 		option := &Option{
 			Description:      description,
 			ShortName:        short,
@@ -299,6 +301,7 @@ func (g *Group) scanStruct(realval reflect.Value, sfield *reflect.StructField, h
 			DefaultMask:      defaultMask,
 			Choices:          choices,
 			Hidden:           hidden,
+			Terminator:       terminator,
 
 			group: g,
 
@@ -311,6 +314,13 @@ func (g *Group) scanStruct(realval reflect.Value, sfield *reflect.StructField, h
 			return newErrorf(ErrInvalidTag,
 				"boolean flag `%s' may not have default values, they always default to `false' and can only be turned on",
 				option.shortAndLongName())
+		}
+
+		if option.isTerminated() && option.value.Type() != reflect.TypeOf((*[][]string)(nil)).Elem() {
+			return newErrorf(ErrInvalidTag,
+				"field representing flag `%s' may not have any `terminator' tag while being of type %s",
+				option.shortAndLongName(),
+				option.value.Type())
 		}
 
 		g.options = append(g.options, option)

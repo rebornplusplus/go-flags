@@ -526,6 +526,19 @@ func (p *Parser) parseOption(s *parseState, name string, option *Option, canarg 
 		}
 
 		err = option.Set(nil)
+	} else if option.isTerminated() {
+		args := make([]string, 0)
+		if argument != nil && *argument != "" {
+			args = append(args, *argument)
+		}
+		for !s.eof() {
+			arg := s.pop()
+			if option.foundTerminator(arg) {
+				break
+			}
+			args = append(args, arg)
+		}
+		err = option.SetTerminatedOption(args)
 	} else if argument != nil || (canarg && !s.eof()) {
 		var arg string
 
