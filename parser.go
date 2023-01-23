@@ -529,7 +529,22 @@ func (p *Parser) parseOption(s *parseState, name string, option *Option, canarg 
 	} else if argument != nil || (canarg && !s.eof()) {
 		var arg string
 
-		if argument != nil {
+		if option.isTerminated() {
+			arg = ""
+			if argument != nil {
+				arg = *argument
+			}
+			for !s.eof() {
+				curArg := s.pop()
+				if option.foundTerminator(curArg) {
+					break
+				}
+				if arg != "" {
+					arg += " "
+				}
+				arg += curArg
+			}
+		} else if argument != nil {
 			arg = *argument
 		} else {
 			arg = s.pop()

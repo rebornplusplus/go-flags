@@ -68,6 +68,18 @@ type Option struct {
 	// If true, the option is not displayed in the help or man page
 	Hidden bool
 
+	// A Terminator supports an option to accept arguments until the
+	// specified value is found as an argument, or End-of-line(EOL)
+	// has been reached.
+	// Inspired from ``find -exec``, it supports following format:
+	//   ./<binary> cmd [opts..] --opt a --b=c -- -d "x y" ; [next-opts..]
+	// With Terminator ; (semi-colon), "--opt" will receive the whole of
+	// 'a --b=c -- -d "x y"' as it's argument, without the single quotes.
+	// Double dashes (--) found before the terminator will not
+	// trigger PassDoubleDash, but after the option is parsed, i.e.
+	// terminator is reached, PassDoubleDash will take effect if set.
+	Terminator string
+
 	// The group which the option belongs to
 	group *Group
 
@@ -566,4 +578,12 @@ func (option *Option) isValidValue(arg string) error {
 		return fmt.Errorf("expected argument for flag `%s', but got option `%s'", option, arg)
 	}
 	return nil
+}
+
+func (option *Option) isTerminated() bool {
+	return option.Terminator != ""
+}
+
+func (option *Option) foundTerminator(arg string) bool {
+	return arg == option.Terminator
 }
